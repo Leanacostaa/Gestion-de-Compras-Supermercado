@@ -38,7 +38,7 @@
 <section class="section container">
   <div class="section-head">
     <div>
-      <h2>Finalizar compra</h2>
+      <h1>Finalizar compra</h1>
       <p>Completá tus datos de contacto y entrega. Revisá el pedido antes de confirmar.</p>
     </div>
   </div>
@@ -79,15 +79,15 @@
           <div class="pay-options">
             <label class="pay-option">
               <input type="radio" name="pago" value="efectivo" checked>
-              <div>💵<br>Efectivo</div>
+              <span>💵<br>Efectivo</span>
             </label>
             <label class="pay-option">
               <input type="radio" name="pago" value="tarjeta">
-              <div>💳<br>Tarjeta</div>
+              <span>💳<br>Tarjeta</span>
             </label>
             <label class="pay-option">
               <input type="radio" name="pago" value="transferencia">
-              <div>🏦<br>Transferencia</div>
+              <span>🏦<br>Transferencia</span>
             </label>
           </div>
         </fieldset>
@@ -131,11 +131,11 @@
 <footer class="footer">
   <div class="container">
     <div>
-      <h4>Mercado Fresco</h4>
+      <h2>Mercado Fresco</h2>
       <p>Almacén de barrio con envío a domicilio. Productos frescos elegidos todos los días.</p>
     </div>
     <div>
-      <h4>Navegación</h4>
+      <h2>Navegación</h2>
       <ul>
         <li><a href="index.html">Inicio</a></li>
         <li><a href="listado_tabla.html">Productos en tabla</a></li>
@@ -144,7 +144,7 @@
       </ul>
     </div>
     <div>
-      <h4>Contacto</h4>
+      <h2>Contacto</h2>
       <ul>
         <li>San Martín 452, Posadas</li>
         <li>(0376) 444-2210</li>
@@ -236,6 +236,7 @@
     document.getElementById('checkout-form').style.display = 'none';
     document.getElementById('confirm-panel').style.display = 'block';
     MercadoCart.clearCart();
+    renderCart();
   });
 
   renderCart();
