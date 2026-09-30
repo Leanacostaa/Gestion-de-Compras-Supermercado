@@ -1,8 +1,10 @@
-{
-  "productoId": "leche-entera",
-  "precioActualizado": 1150
-}
-{
-  "productoId": "tomate-perita",
-  "precioActualizado": 1850
-}
+[
+  {
+    "productoId": "leche-entera",
+    "precioActualizado": 1150
+  },
+  {
+    "productoId": "tomate-perita",
+    "precioActualizado": 1850
+  }
+]
