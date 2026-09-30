@@ -13,6 +13,54 @@ async function consultarPrecio(productoId) {
   return producto.precioActualizado;
 }
 
+async function cargarFichaProducto() {
+  const respuesta = await fetch('productos.json');
+  if (!respuesta.ok) throw new Error('No se pudo cargar el catálogo');
+
+  const productos = await respuesta.json();
+  const productoId = new URLSearchParams(window.location.search).get('id') || 'tomate-perita';
+  const producto = productos.find((item) => item.id === productoId);
+  if (!producto) throw new Error(`No se encontró el producto ${productoId}`);
+
+  document.title = `${producto.nombre} — Mercado Fresco`;
+  document.querySelectorAll('[data-product-name]').forEach((elemento) => {
+    elemento.textContent = producto.nombre;
+  });
+  document.querySelectorAll('[data-product-category]').forEach((elemento) => {
+    elemento.textContent = producto.categoria;
+  });
+  document.querySelector('[data-product-description]').textContent = producto.descripcion;
+  document.querySelectorAll('[data-product-emoji]').forEach((elemento) => {
+    elemento.textContent = producto.emoji;
+  });
+  document.querySelectorAll('[data-product-unit]').forEach((elemento) => {
+    elemento.textContent = producto.unidad;
+  });
+
+  const precioAnterior = document.querySelector('[data-product-old-price]');
+  const badge = document.querySelector('[data-product-badge]');
+  if (producto.precioAnterior) {
+    precioAnterior.textContent = formatoPrecio.format(producto.precioAnterior);
+    precioAnterior.style.display = '';
+  } else {
+    precioAnterior.style.display = 'none';
+  }
+  if (producto.badge) {
+    badge.textContent = producto.badge;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  const botonAgregar = document.querySelector('[data-add-to-cart]');
+  botonAgregar.dataset.id = producto.id;
+  botonAgregar.dataset.name = producto.nombre;
+  botonAgregar.dataset.price = producto.precio;
+  botonAgregar.dataset.unit = producto.unidad;
+  botonAgregar.dataset.emoji = producto.emoji;
+  return botonAgregar;
+}
+
 function configurarContador() {
   const inputCantidad = document.querySelector('#input-cantidad');
   const subtotal = document.querySelector('#subtotal-producto');
@@ -29,23 +77,14 @@ function configurarContador() {
     subtotal.textContent = formatoPrecio.format(cantidad * precioUnitario);
   }
 
-  document.querySelectorAll('[data-qty-step]').forEach((boton) => {
-    boton.addEventListener('click', (evento) => {
-      evento.stopPropagation();
-      const paso = Number.parseInt(boton.dataset.qtyStep, 10);
-      const cantidad = Number.parseInt(inputCantidad.value, 10) || 1;
-      inputCantidad.value = Math.max(1, cantidad + paso);
-      actualizarSubtotal();
-    });
-  });
-
   inputCantidad.addEventListener('input', actualizarSubtotal);
 
-  consultarPrecio(botonAgregar.dataset.id)
-    .then((nuevoPrecio) => {
+  cargarFichaProducto()
+    .then((boton) => consultarPrecio(boton.dataset.id).then((nuevoPrecio) => ({ boton, nuevoPrecio })))
+    .then(({ boton, nuevoPrecio }) => {
       precioUnitario = nuevoPrecio;
       precio.textContent = formatoPrecio.format(precioUnitario);
-      botonAgregar.dataset.price = precioUnitario;
+      boton.dataset.price = precioUnitario;
       actualizarSubtotal();
     })
     .catch((error) => {
