@@ -1,55 +1,59 @@
-// Variable global para mantener el precio
-let precioActual = 0;
+const formatoPrecio = new Intl.NumberFormat('es-AR');
 
-// 1. Función Asíncrona para obtener el precio vía HTTP (fetch)
-async function consultarPrecio() {
-  try {
-    const respuesta = await fetch('precios.json');
-    if (!respuesta.ok) throw new Error("Error en la red");
-    
-    const datos = await respuesta.json();
-    precioActual = datos.precioActualizado;
-    
-    // Inyectamos el precio unitario en el DOM al cargar
-    document.getElementById('precio-unitario').textContent = precioActual.toLocaleString();
-    actualizarSubtotal();
-    
-  } catch (error) {
-    console.error("Error al obtener precios:", error);
+async function consultarPrecio(productoId) {
+  const respuesta = await fetch('precios.json');
+  if (!respuesta.ok) throw new Error('No se pudo consultar la lista de precios');
+
+  const productos = await respuesta.json();
+  const producto = productos.find((item) => item.productoId === productoId);
+  if (!producto || !Number.isFinite(producto.precioActualizado)) {
+    throw new Error(`No hay un precio válido para ${productoId}`);
   }
+
+  return producto.precioActualizado;
 }
 
-// 2. Función para actualizar el subtotal mutando el DOM
-function actualizarSubtotal() {
-  const cantidad = parseInt(document.getElementById('input-cantidad').value);
-  const subtotal = cantidad * precioActual;
-  
-  document.getElementById('subtotal-producto').textContent = subtotal.toLocaleString();
-}
+function configurarContador() {
+  const inputCantidad = document.querySelector('#input-cantidad');
+  const subtotal = document.querySelector('#subtotal-producto');
+  const precio = document.querySelector('#precio-unitario');
+  const botonAgregar = document.querySelector('[data-add-to-cart]');
 
-// 3. Controladores de Eventos (Event Listeners desacoplados)
-function configurarContadores() {
-  const btnIncrementar = document.getElementById('btn-incrementar');
-  const btnDecrementar = document.getElementById('btn-decrementar');
-  const inputCantidad = document.getElementById('input-cantidad');
+  if (!inputCantidad || !subtotal || !precio || !botonAgregar) return;
 
-  btnIncrementar.addEventListener('click', () => {
-    let cant = parseInt(inputCantidad.value);
-    inputCantidad.value = cant + 1;
-    actualizarSubtotal();
-  });
+  let precioUnitario = Number(botonAgregar.dataset.price);
 
-  btnDecrementar.addEventListener('click', () => {
-    let cant = parseInt(inputCantidad.value);
-    if (cant > 1) { // Evita cantidades negativas o cero
-      inputCantidad.value = cant - 1;
+  function actualizarSubtotal() {
+    const cantidad = Math.max(1, Number.parseInt(inputCantidad.value, 10) || 1);
+    inputCantidad.value = cantidad;
+    subtotal.textContent = formatoPrecio.format(cantidad * precioUnitario);
+  }
+
+  document.querySelectorAll('[data-qty-step]').forEach((boton) => {
+    boton.addEventListener('click', (evento) => {
+      evento.stopPropagation();
+      const paso = Number.parseInt(boton.dataset.qtyStep, 10);
+      const cantidad = Number.parseInt(inputCantidad.value, 10) || 1;
+      inputCantidad.value = Math.max(1, cantidad + paso);
       actualizarSubtotal();
-    }
+    });
   });
+
+  inputCantidad.addEventListener('input', actualizarSubtotal);
+
+  consultarPrecio(botonAgregar.dataset.id)
+    .then((nuevoPrecio) => {
+      precioUnitario = nuevoPrecio;
+      precio.textContent = formatoPrecio.format(precioUnitario);
+      botonAgregar.dataset.price = precioUnitario;
+      actualizarSubtotal();
+    })
+    .catch((error) => {
+      console.error('Error al cargar el precio actualizado:', error);
+      actualizarSubtotal();
+    });
+
+  actualizarSubtotal();
 }
 
-// 4. Inicialización al cargar la ventana
-window.addEventListener('load', () => {
-  consultarPrecio();
-  configurarContadores();
-});
+document.addEventListener('DOMContentLoaded', configurarContador);
